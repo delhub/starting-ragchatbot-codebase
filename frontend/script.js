@@ -28,8 +28,10 @@ function setupEventListeners() {
     chatInput.addEventListener('keypress', (e) => {
         if (e.key === 'Enter') sendMessage();
     });
-    
-    
+
+    // New chat button
+    document.getElementById('newChatButton').addEventListener('click', createNewSession);
+
     // Suggested questions
     document.querySelectorAll('.suggested-item').forEach(button => {
         button.addEventListener('click', (e) => {
@@ -122,10 +124,30 @@ function addMessage(content, type, sources = null, isWelcome = false) {
     let html = `<div class="message-content">${displayContent}</div>`;
     
     if (sources && sources.length > 0) {
+        // Format sources as clickable links
+        const formattedSources = sources.map(source => {
+            // Handle both object format (with links) and legacy string format
+            if (typeof source === 'object' && source !== null) {
+                const text = source.text || 'Unknown Source';
+                const link = source.lesson_link || source.course_link;
+
+                if (link) {
+                    // Create clickable link that opens in new tab
+                    return `<a href="${escapeHtml(link)}" target="_blank" rel="noopener noreferrer">${escapeHtml(text)}</a>`;
+                } else {
+                    // No link available, display as plain text
+                    return escapeHtml(text);
+                }
+            } else {
+                // Legacy string format - display as plain text
+                return escapeHtml(String(source));
+            }
+        }).join(', ');
+
         html += `
             <details class="sources-collapsible">
                 <summary class="sources-header">Sources</summary>
-                <div class="sources-content">${sources.join(', ')}</div>
+                <div class="sources-content">${formattedSources}</div>
             </details>
         `;
     }
