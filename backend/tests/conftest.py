@@ -285,3 +285,119 @@ def create_mock_tool_use(tool_name: str, tool_input: dict, tool_id: str = None):
     mock_tool.input = tool_input
     mock_tool.id = tool_id or f"tool_{tool_name}_{id(mock_tool)}"
     return mock_tool
+
+
+# ============================================================================
+# API Testing Fixtures
+# ============================================================================
+
+@pytest.fixture
+def mock_rag_system():
+    """Mock RAG system for API testing"""
+    mock_rag = Mock()
+
+    # Mock query method
+    mock_rag.query = Mock(return_value=(
+        "This is a test response about prompt caching.",
+        [
+            {
+                "text": "Building Towards Computer Use - Lesson 5",
+                "course_link": "https://example.com/course",
+                "lesson_link": "https://example.com/lesson"
+            }
+        ]
+    ))
+
+    # Mock session manager
+    mock_rag.session_manager = Mock()
+    mock_rag.session_manager.create_session = Mock(return_value="test_session_123")
+
+    # Mock get_course_analytics
+    mock_rag.get_course_analytics = Mock(return_value={
+        "total_courses": 2,
+        "course_titles": [
+            "Building Towards Computer Use with Claude",
+            "Introduction to MCP"
+        ]
+    })
+
+    return mock_rag
+
+
+@pytest.fixture
+def test_client(mock_rag_system):
+    """Create TestClient with mocked RAG system"""
+    from fastapi.testclient import TestClient
+    from fastapi import FastAPI, HTTPException
+    from pydantic import BaseModel
+    from typing import List, Optional, Dict
+
+    # Create a test app without static file mounting
+    test_app = FastAPI(title="Test Course Materials RAG System")
+
+    # Define request/response models
+    class QueryRequest(BaseModel):
+        query: str
+        session_id: Optional[str] = None
+
+    class QueryResponse(BaseModel):
+        answer: str
+        sources: List[Dict[str, Optional[str]]]
+        session_id: str
+
+    class CourseStats(BaseModel):
+        total_courses: int
+        course_titles: List[str]
+
+    # Define API endpoints inline
+    @test_app.post("/api/query", response_model=QueryResponse)
+    async def query_documents(request: QueryRequest):
+        try:
+            session_id = request.session_id
+            if not session_id:
+                session_id = mock_rag_system.session_manager.create_session()
+
+            answer, sources = mock_rag_system.query(request.query, session_id)
+
+            return QueryResponse(
+                answer=answer,
+                sources=sources,
+                session_id=session_id
+            )
+        except Exception as e:
+            raise HTTPException(status_code=500, detail=str(e))
+
+    @test_app.get("/api/courses", response_model=CourseStats)
+    async def get_course_stats():
+        try:
+            analytics = mock_rag_system.get_course_analytics()
+            return CourseStats(
+                total_courses=analytics["total_courses"],
+                course_titles=analytics["course_titles"]
+            )
+        except Exception as e:
+            raise HTTPException(status_code=500, detail=str(e))
+
+    @test_app.get("/")
+    async def root():
+        return {"message": "RAG Chatbot API"}
+
+    return TestClient(test_app)
+
+
+@pytest.fixture
+def sample_query_request():
+    """Sample query request data"""
+    return {
+        "query": "What is prompt caching?",
+        "session_id": None
+    }
+
+
+@pytest.fixture
+def sample_query_request_with_session():
+    """Sample query request with session ID"""
+    return {
+        "query": "Tell me more about computer use",
+        "session_id": "existing_session_123"
+    }
