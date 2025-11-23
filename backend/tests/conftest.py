@@ -1,21 +1,24 @@
 """
 Pytest configuration and fixtures for RAG chatbot tests.
 """
-import pytest
-from unittest.mock import Mock, MagicMock, patch
-from dataclasses import dataclass
-from typing import List, Dict, Any, Optional
-import sys
+
 import os
+import sys
+from dataclasses import dataclass
+from typing import Any, Dict, List, Optional
+from unittest.mock import MagicMock, Mock, patch
+
+import pytest
 
 # Add parent directory to path to import backend modules
-sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..'))
+sys.path.insert(0, os.path.join(os.path.dirname(__file__), ".."))
 
 
 # Define SearchResults locally to avoid importing chromadb
 @dataclass
 class SearchResults:
     """Mock SearchResults class"""
+
     documents: List[str]
     metadata: List[Dict[str, Any]]
     distances: List[float]
@@ -38,6 +41,7 @@ except ImportError:
 @dataclass
 class MockConfig(Config):
     """Test configuration with corrected MAX_RESULTS"""
+
     MAX_RESULTS: int = 5
     ANTHROPIC_API_KEY: str = "test-api-key-12345"
     ANTHROPIC_MODEL: str = "claude-sonnet-4-20250514"
@@ -62,29 +66,29 @@ def sample_course_data():
         "documents": [
             "Prompt caching is a powerful feature that allows you to cache frequently used context...",
             "Computer use enables Claude to interact with computer interfaces through screenshots...",
-            "The Model Context Protocol (MCP) provides a standardized way to connect AI models..."
+            "The Model Context Protocol (MCP) provides a standardized way to connect AI models...",
         ],
         "metadata": [
             {
                 "course_title": "Building Towards Computer Use with Claude",
                 "lesson_number": 5,
                 "chunk_index": 0,
-                "instructor": "Dr. Jane Smith"
+                "instructor": "Dr. Jane Smith",
             },
             {
                 "course_title": "Building Towards Computer Use with Claude",
                 "lesson_number": 3,
                 "chunk_index": 1,
-                "instructor": "Dr. Jane Smith"
+                "instructor": "Dr. Jane Smith",
             },
             {
                 "course_title": "Introduction to MCP",
                 "lesson_number": 1,
                 "chunk_index": 0,
-                "instructor": "Prof. John Doe"
-            }
+                "instructor": "Prof. John Doe",
+            },
         ],
-        "distances": [0.15, 0.23, 0.35]
+        "distances": [0.15, 0.23, 0.35],
     }
 
 
@@ -94,16 +98,14 @@ def mock_vector_store(sample_course_data):
     mock_store = Mock()
 
     # Configure search method to return SearchResults
-    def mock_search(query: str, course_name: Optional[str] = None,
-                   lesson_number: Optional[int] = None) -> SearchResults:
+    def mock_search(
+        query: str,
+        course_name: Optional[str] = None,
+        lesson_number: Optional[int] = None,
+    ) -> SearchResults:
         # Simulate empty results for specific queries
         if "nonexistent" in query.lower():
-            return SearchResults(
-                documents=[],
-                metadata=[],
-                distances=[],
-                error=None
-            )
+            return SearchResults(documents=[], metadata=[], distances=[], error=None)
 
         # Simulate error condition
         if "error" in query.lower():
@@ -111,7 +113,7 @@ def mock_vector_store(sample_course_data):
                 documents=[],
                 metadata=[],
                 distances=[],
-                error="Vector store connection error"
+                error="Vector store connection error",
             )
 
         # Filter results based on parameters
@@ -121,8 +123,11 @@ def mock_vector_store(sample_course_data):
 
         # Apply course filter
         if course_name:
-            filtered = [(d, m, di) for d, m, di in zip(docs, meta, dist)
-                       if course_name.lower() in m.get("course_title", "").lower()]
+            filtered = [
+                (d, m, di)
+                for d, m, di in zip(docs, meta, dist)
+                if course_name.lower() in m.get("course_title", "").lower()
+            ]
             if filtered:
                 docs, meta, dist = zip(*filtered)
             else:
@@ -130,36 +135,40 @@ def mock_vector_store(sample_course_data):
 
         # Apply lesson filter
         if lesson_number is not None:
-            filtered = [(d, m, di) for d, m, di in zip(docs, meta, dist)
-                       if m.get("lesson_number") == lesson_number]
+            filtered = [
+                (d, m, di)
+                for d, m, di in zip(docs, meta, dist)
+                if m.get("lesson_number") == lesson_number
+            ]
             if filtered:
                 docs, meta, dist = zip(*filtered)
             else:
                 docs, meta, dist = [], [], []
 
         return SearchResults(
-            documents=list(docs),
-            metadata=list(meta),
-            distances=list(dist),
-            error=None
+            documents=list(docs), metadata=list(meta), distances=list(dist), error=None
         )
 
     mock_store.search = Mock(side_effect=mock_search)
 
     # Mock link retrieval methods
     mock_store.get_course_link = Mock(return_value="https://example.com/course/123")
-    mock_store.get_lesson_link = Mock(return_value="https://example.com/course/123/lesson/5")
+    mock_store.get_lesson_link = Mock(
+        return_value="https://example.com/course/123/lesson/5"
+    )
 
     # Mock course outline
-    mock_store.get_course_outline = Mock(return_value={
-        "course_title": "Building Towards Computer Use with Claude",
-        "course_link": "https://example.com/course/123",
-        "lessons": [
-            {"lesson_number": 1, "lesson_title": "Introduction"},
-            {"lesson_number": 2, "lesson_title": "Getting Started"},
-            {"lesson_number": 3, "lesson_title": "Computer Use Basics"}
-        ]
-    })
+    mock_store.get_course_outline = Mock(
+        return_value={
+            "course_title": "Building Towards Computer Use with Claude",
+            "course_link": "https://example.com/course/123",
+            "lessons": [
+                {"lesson_number": 1, "lesson_title": "Introduction"},
+                {"lesson_number": 2, "lesson_title": "Getting Started"},
+                {"lesson_number": 3, "lesson_title": "Computer Use Basics"},
+            ],
+        }
+    )
 
     return mock_store
 
@@ -193,7 +202,7 @@ def mock_anthropic_response_with_tool():
     mock_tool_use.input = {
         "query": "What is prompt caching?",
         "course_name": None,
-        "lesson_number": None
+        "lesson_number": None,
     }
 
     mock_response.content = [mock_tool_use]
@@ -215,9 +224,11 @@ def mock_anthropic_final_response():
 
 
 @pytest.fixture
-def mock_anthropic_client(mock_anthropic_response_no_tool,
-                          mock_anthropic_response_with_tool,
-                          mock_anthropic_final_response):
+def mock_anthropic_client(
+    mock_anthropic_response_no_tool,
+    mock_anthropic_response_with_tool,
+    mock_anthropic_final_response,
+):
     """Mock Anthropic client with realistic message creation"""
     mock_client = Mock()
 

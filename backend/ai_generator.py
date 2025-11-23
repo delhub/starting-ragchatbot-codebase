@@ -1,9 +1,11 @@
+from typing import Any, Dict, List, Optional
+
 import anthropic
-from typing import List, Optional, Dict, Any
+
 
 class AIGenerator:
     """Handles interactions with Anthropic's Claude API for generating responses"""
-    
+
     # Static system prompt to avoid rebuilding on each call
     SYSTEM_PROMPT = """ You are an AI assistant specialized in course materials and educational content with access to comprehensive tools for course information.
 
@@ -36,16 +38,16 @@ All responses must be:
 4. **Example-supported** - Include relevant examples when they aid understanding
 Provide only the direct answer to what was asked.
 """
-    
+
     def __init__(self, api_key: str, model: str):
         self.client = anthropic.Anthropic(api_key=api_key)
         self.model = model
-        
+
         # Pre-build base API parameters
         self.base_params = {
             "model": self.model,
             "temperature": 0,
-            "max_tokens": 1200  # Increased to handle complex multi-round responses
+            "max_tokens": 1200,  # Increased to handle complex multi-round responses
         }
 
     def _extract_text_from_response(self, response) -> str:
@@ -62,17 +64,17 @@ Provide only the direct answer to what was asked.
             ValueError: If no text content found in response
         """
         # Check if content exists and is not empty
-        if not hasattr(response, 'content') or not response.content:
+        if not hasattr(response, "content") or not response.content:
             raise ValueError("Response contains no content blocks")
 
         # Find first text block in content
         for block in response.content:
-            if hasattr(block, 'type') and block.type == "text":
-                if hasattr(block, 'text'):
+            if hasattr(block, "type") and block.type == "text":
+                if hasattr(block, "text"):
                     return block.text
 
         # No text block found - return informative error
-        block_types = [getattr(block, 'type', 'unknown') for block in response.content]
+        block_types = [getattr(block, "type", "unknown") for block in response.content]
         raise ValueError(
             f"No text content found in response. "
             f"Stop reason: {response.stop_reason}, "
@@ -109,17 +111,18 @@ Provide only the direct answer to what was asked.
             if content_block.type == "tool_use":
                 try:
                     tool_result = tool_manager.execute_tool(
-                        content_block.name,
-                        **content_block.input
+                        content_block.name, **content_block.input
                     )
                 except Exception as e:
                     tool_result = f"Error executing tool {content_block.name}: {str(e)}"
 
-                tool_results.append({
-                    "type": "tool_result",
-                    "tool_use_id": content_block.id,
-                    "content": tool_result
-                })
+                tool_results.append(
+                    {
+                        "type": "tool_result",
+                        "tool_use_id": content_block.id,
+                        "content": tool_result,
+                    }
+                )
         return tool_results
 
     def _final_synthesis(self, messages: List, system_content: str) -> str:
@@ -138,7 +141,7 @@ Provide only the direct answer to what was asked.
         final_params = {
             **self.base_params,
             "messages": messages,
-            "system": system_content
+            "system": system_content,
         }
 
         try:
@@ -151,15 +154,20 @@ Provide only the direct answer to what was asked.
             print("Falling back to summarizing available tool results")
 
             # Provide a fallback response based on the query
-            return ("I've searched through the course materials but need more tool calls "
-                   "to fully answer your question. Please try asking a more specific question, "
-                   "or break your question into smaller parts.")
+            return (
+                "I've searched through the course materials but need more tool calls "
+                "to fully answer your question. Please try asking a more specific question, "
+                "or break your question into smaller parts."
+            )
 
-    def generate_response(self, query: str,
-                         conversation_history: Optional[str] = None,
-                         tools: Optional[List] = None,
-                         tool_manager=None,
-                         max_rounds: int = 2) -> str:
+    def generate_response(
+        self,
+        query: str,
+        conversation_history: Optional[str] = None,
+        tools: Optional[List] = None,
+        tool_manager=None,
+        max_rounds: int = 2,
+    ) -> str:
         """
         Generate AI response with iterative tool usage support (up to max_rounds).
 
@@ -186,7 +194,7 @@ Provide only the direct answer to what was asked.
             api_params = {
                 **self.base_params,
                 "messages": messages,
-                "system": system_content
+                "system": system_content,
             }
 
             # Add tools if available

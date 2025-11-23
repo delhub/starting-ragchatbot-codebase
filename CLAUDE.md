@@ -35,9 +35,38 @@ cd backend && uv run uvicorn app:app --reload --port 8000
 # Install dependencies
 uv sync
 
+# Install with dev dependencies (includes code quality tools)
+uv sync --extra dev
+
 # Create .env file with:
 ANTHROPIC_API_KEY=your_key_here
 ```
+
+### Code Quality Tools
+
+This project uses several code quality tools to maintain consistent code style:
+
+```bash
+# Format code with black and isort
+./scripts/format.sh
+
+# Check code formatting (without modifying files)
+./scripts/lint.sh
+
+# Run type checking with mypy
+./scripts/type-check.sh
+
+# Run all quality checks (formatting, type checking, and tests)
+./scripts/quality-check.sh
+```
+
+**Tools included:**
+- **black**: Automatic code formatter (line length: 88)
+- **isort**: Import statement organizer (compatible with black)
+- **flake8**: Style guide enforcement (configured to work with black)
+- **mypy**: Static type checker for Python
+
+All configuration is in `pyproject.toml` and `.flake8`.
 
 ### Working with the Vector Database
 

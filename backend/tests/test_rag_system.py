@@ -1,13 +1,15 @@
 """
 Integration tests for RAGSystem in rag_system.py
 """
-import pytest
-from unittest.mock import Mock, patch, MagicMock
-import sys
+
 import os
+import sys
+from unittest.mock import MagicMock, Mock, patch
+
+import pytest
 
 # Add parent directory to path
-sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..'))
+sys.path.insert(0, os.path.join(os.path.dirname(__file__), ".."))
 
 from rag_system import RAGSystem
 
@@ -15,32 +17,32 @@ from rag_system import RAGSystem
 class TestRAGSystemInitialization:
     """Test RAG system initialization"""
 
-    @patch('rag_system.AIGenerator')
-    @patch('rag_system.VectorStore')
-    @patch('rag_system.DocumentProcessor')
-    @patch('rag_system.SessionManager')
-    def test_initialization_creates_components(self, mock_session, mock_doc_proc,
-                                              mock_vector_store, mock_ai_gen,
-                                              test_config):
+    @patch("rag_system.AIGenerator")
+    @patch("rag_system.VectorStore")
+    @patch("rag_system.DocumentProcessor")
+    @patch("rag_system.SessionManager")
+    def test_initialization_creates_components(
+        self, mock_session, mock_doc_proc, mock_vector_store, mock_ai_gen, test_config
+    ):
         """Test that all components are initialized"""
         rag = RAGSystem(test_config)
 
         # Check that all components exist
-        assert hasattr(rag, 'document_processor')
-        assert hasattr(rag, 'vector_store')
-        assert hasattr(rag, 'ai_generator')
-        assert hasattr(rag, 'session_manager')
-        assert hasattr(rag, 'tool_manager')
-        assert hasattr(rag, 'search_tool')
-        assert hasattr(rag, 'outline_tool')
+        assert hasattr(rag, "document_processor")
+        assert hasattr(rag, "vector_store")
+        assert hasattr(rag, "ai_generator")
+        assert hasattr(rag, "session_manager")
+        assert hasattr(rag, "tool_manager")
+        assert hasattr(rag, "search_tool")
+        assert hasattr(rag, "outline_tool")
 
-    @patch('rag_system.AIGenerator')
-    @patch('rag_system.VectorStore')
-    @patch('rag_system.DocumentProcessor')
-    @patch('rag_system.SessionManager')
-    def test_tools_registered(self, mock_session, mock_doc_proc,
-                             mock_vector_store, mock_ai_gen,
-                             test_config):
+    @patch("rag_system.AIGenerator")
+    @patch("rag_system.VectorStore")
+    @patch("rag_system.DocumentProcessor")
+    @patch("rag_system.SessionManager")
+    def test_tools_registered(
+        self, mock_session, mock_doc_proc, mock_vector_store, mock_ai_gen, test_config
+    ):
         """Test that tools are registered with tool manager"""
         rag = RAGSystem(test_config)
 
@@ -57,17 +59,24 @@ class TestRAGSystemInitialization:
 class TestRAGSystemQuery:
     """Test query processing"""
 
-    @patch('rag_system.AIGenerator')
-    @patch('rag_system.VectorStore')
-    @patch('rag_system.DocumentProcessor')
-    @patch('rag_system.SessionManager')
-    def test_query_without_session(self, mock_session_class, mock_doc_proc,
-                                   mock_vector_store, mock_ai_gen_class,
-                                   test_config):
+    @patch("rag_system.AIGenerator")
+    @patch("rag_system.VectorStore")
+    @patch("rag_system.DocumentProcessor")
+    @patch("rag_system.SessionManager")
+    def test_query_without_session(
+        self,
+        mock_session_class,
+        mock_doc_proc,
+        mock_vector_store,
+        mock_ai_gen_class,
+        test_config,
+    ):
         """Test query without session ID"""
         # Setup mocks
         mock_ai_instance = Mock()
-        mock_ai_instance.generate_response = Mock(return_value="This is the AI response")
+        mock_ai_instance.generate_response = Mock(
+            return_value="This is the AI response"
+        )
         mock_ai_gen_class.return_value = mock_ai_instance
 
         mock_session_instance = Mock()
@@ -86,17 +95,24 @@ class TestRAGSystemQuery:
         # Should not try to get history
         mock_session_instance.get_conversation_history.assert_not_called()
 
-    @patch('rag_system.AIGenerator')
-    @patch('rag_system.VectorStore')
-    @patch('rag_system.DocumentProcessor')
-    @patch('rag_system.SessionManager')
-    def test_query_with_session(self, mock_session_class, mock_doc_proc,
-                               mock_vector_store, mock_ai_gen_class,
-                               test_config):
+    @patch("rag_system.AIGenerator")
+    @patch("rag_system.VectorStore")
+    @patch("rag_system.DocumentProcessor")
+    @patch("rag_system.SessionManager")
+    def test_query_with_session(
+        self,
+        mock_session_class,
+        mock_doc_proc,
+        mock_vector_store,
+        mock_ai_gen_class,
+        test_config,
+    ):
         """Test query with session ID"""
         # Setup mocks
         mock_ai_instance = Mock()
-        mock_ai_instance.generate_response = Mock(return_value="This is the AI response")
+        mock_ai_instance.generate_response = Mock(
+            return_value="This is the AI response"
+        )
         mock_ai_gen_class.return_value = mock_ai_instance
 
         mock_session_instance = Mock()
@@ -112,18 +128,25 @@ class TestRAGSystemQuery:
         response, sources = rag.query("What is AI?", session_id="test_session")
 
         # Should get history
-        mock_session_instance.get_conversation_history.assert_called_once_with("test_session")
+        mock_session_instance.get_conversation_history.assert_called_once_with(
+            "test_session"
+        )
 
         # Should add exchange
         mock_session_instance.add_exchange.assert_called_once()
 
-    @patch('rag_system.AIGenerator')
-    @patch('rag_system.VectorStore')
-    @patch('rag_system.DocumentProcessor')
-    @patch('rag_system.SessionManager')
-    def test_query_passes_tools_to_ai(self, mock_session_class, mock_doc_proc,
-                                     mock_vector_store, mock_ai_gen_class,
-                                     test_config):
+    @patch("rag_system.AIGenerator")
+    @patch("rag_system.VectorStore")
+    @patch("rag_system.DocumentProcessor")
+    @patch("rag_system.SessionManager")
+    def test_query_passes_tools_to_ai(
+        self,
+        mock_session_class,
+        mock_doc_proc,
+        mock_vector_store,
+        mock_ai_gen_class,
+        test_config,
+    ):
         """Test that tools are passed to AI generator"""
         # Setup mocks
         mock_ai_instance = Mock()
@@ -148,17 +171,24 @@ class TestRAGSystemQuery:
         assert isinstance(call_kwargs["tools"], list)
         assert len(call_kwargs["tools"]) >= 2
 
-    @patch('rag_system.AIGenerator')
-    @patch('rag_system.VectorStore')
-    @patch('rag_system.DocumentProcessor')
-    @patch('rag_system.SessionManager')
-    def test_query_retrieves_sources(self, mock_session_class, mock_doc_proc,
-                                    mock_vector_store, mock_ai_gen_class,
-                                    test_config):
+    @patch("rag_system.AIGenerator")
+    @patch("rag_system.VectorStore")
+    @patch("rag_system.DocumentProcessor")
+    @patch("rag_system.SessionManager")
+    def test_query_retrieves_sources(
+        self,
+        mock_session_class,
+        mock_doc_proc,
+        mock_vector_store,
+        mock_ai_gen_class,
+        test_config,
+    ):
         """Test that sources are retrieved from tool manager"""
         # Setup mocks
         mock_ai_instance = Mock()
-        mock_ai_instance.generate_response = Mock(return_value="AI response about prompt caching")
+        mock_ai_instance.generate_response = Mock(
+            return_value="AI response about prompt caching"
+        )
         mock_ai_gen_class.return_value = mock_ai_instance
 
         mock_session_instance = Mock()
@@ -169,7 +199,11 @@ class TestRAGSystemQuery:
 
         # Manually set sources in tool manager (simulating a search)
         rag.tool_manager.tools["search_course_content"].last_sources = [
-            {"text": "Course A - Lesson 1", "course_link": "http://test.com", "lesson_link": "http://test.com/1"}
+            {
+                "text": "Course A - Lesson 1",
+                "course_link": "http://test.com",
+                "lesson_link": "http://test.com/1",
+            }
         ]
 
         # Execute query
@@ -179,13 +213,18 @@ class TestRAGSystemQuery:
         assert isinstance(sources, list)
         assert len(sources) > 0
 
-    @patch('rag_system.AIGenerator')
-    @patch('rag_system.VectorStore')
-    @patch('rag_system.DocumentProcessor')
-    @patch('rag_system.SessionManager')
-    def test_query_resets_sources_after_retrieval(self, mock_session_class, mock_doc_proc,
-                                                  mock_vector_store, mock_ai_gen_class,
-                                                  test_config):
+    @patch("rag_system.AIGenerator")
+    @patch("rag_system.VectorStore")
+    @patch("rag_system.DocumentProcessor")
+    @patch("rag_system.SessionManager")
+    def test_query_resets_sources_after_retrieval(
+        self,
+        mock_session_class,
+        mock_doc_proc,
+        mock_vector_store,
+        mock_ai_gen_class,
+        test_config,
+    ):
         """Test that sources are reset after being retrieved"""
         # Setup mocks
         mock_ai_instance = Mock()
@@ -210,13 +249,18 @@ class TestRAGSystemQuery:
         new_sources = rag.tool_manager.get_last_sources()
         assert len(new_sources) == 0
 
-    @patch('rag_system.AIGenerator')
-    @patch('rag_system.VectorStore')
-    @patch('rag_system.DocumentProcessor')
-    @patch('rag_system.SessionManager')
-    def test_query_formats_prompt_correctly(self, mock_session_class, mock_doc_proc,
-                                           mock_vector_store, mock_ai_gen_class,
-                                           test_config):
+    @patch("rag_system.AIGenerator")
+    @patch("rag_system.VectorStore")
+    @patch("rag_system.DocumentProcessor")
+    @patch("rag_system.SessionManager")
+    def test_query_formats_prompt_correctly(
+        self,
+        mock_session_class,
+        mock_doc_proc,
+        mock_vector_store,
+        mock_ai_gen_class,
+        test_config,
+    ):
         """Test that query is formatted correctly for AI"""
         # Setup mocks
         mock_ai_instance = Mock()
@@ -243,12 +287,17 @@ class TestRAGSystemQuery:
 class TestRAGSystemWithRealToolExecution:
     """Test RAG system with actual tool execution (mocked vector store)"""
 
-    @patch('rag_system.AIGenerator')
-    @patch('rag_system.DocumentProcessor')
-    @patch('rag_system.SessionManager')
-    def test_query_executes_search_tool(self, mock_session_class, mock_doc_proc,
-                                       mock_ai_gen_class, test_config,
-                                       mock_vector_store):
+    @patch("rag_system.AIGenerator")
+    @patch("rag_system.DocumentProcessor")
+    @patch("rag_system.SessionManager")
+    def test_query_executes_search_tool(
+        self,
+        mock_session_class,
+        mock_doc_proc,
+        mock_ai_gen_class,
+        test_config,
+        mock_vector_store,
+    ):
         """Test that search tool is actually executed"""
         # Setup AI to trigger tool use
         mock_tool_use_response = Mock()
@@ -258,7 +307,11 @@ class TestRAGSystemWithRealToolExecution:
         mock_tool_block.type = "tool_use"
         mock_tool_block.name = "search_course_content"
         mock_tool_block.id = "tool_123"
-        mock_tool_block.input = {"query": "prompt caching", "course_name": None, "lesson_number": None}
+        mock_tool_block.input = {
+            "query": "prompt caching",
+            "course_name": None,
+            "lesson_number": None,
+        }
         mock_tool_use_response.content = [mock_tool_block]
 
         mock_final_response = Mock()
@@ -269,7 +322,9 @@ class TestRAGSystemWithRealToolExecution:
         mock_final_response.content = [mock_final_content]
 
         mock_ai_instance = Mock()
-        mock_ai_instance.generate_response = Mock(return_value="Final response about prompt caching")
+        mock_ai_instance.generate_response = Mock(
+            return_value="Final response about prompt caching"
+        )
         mock_ai_gen_class.return_value = mock_ai_instance
 
         mock_session_instance = Mock()
@@ -278,7 +333,7 @@ class TestRAGSystemWithRealToolExecution:
         mock_session_class.return_value = mock_session_instance
 
         # Patch VectorStore to use our mock
-        with patch('rag_system.VectorStore', return_value=mock_vector_store):
+        with patch("rag_system.VectorStore", return_value=mock_vector_store):
             rag = RAGSystem(test_config)
 
             # Execute query
@@ -290,12 +345,17 @@ class TestRAGSystemWithRealToolExecution:
             # Should have sources
             assert isinstance(sources, list)
 
-    @patch('rag_system.AIGenerator')
-    @patch('rag_system.DocumentProcessor')
-    @patch('rag_system.SessionManager')
-    def test_content_query_returns_results(self, mock_session_class, mock_doc_proc,
-                                          mock_ai_gen_class, test_config,
-                                          mock_vector_store):
+    @patch("rag_system.AIGenerator")
+    @patch("rag_system.DocumentProcessor")
+    @patch("rag_system.SessionManager")
+    def test_content_query_returns_results(
+        self,
+        mock_session_class,
+        mock_doc_proc,
+        mock_ai_gen_class,
+        test_config,
+        mock_vector_store,
+    ):
         """Test that content queries return results with sources"""
         # Setup mocks
         mock_ai_instance = Mock()
@@ -309,7 +369,7 @@ class TestRAGSystemWithRealToolExecution:
         mock_session_instance.add_exchange = Mock()
         mock_session_class.return_value = mock_session_instance
 
-        with patch('rag_system.VectorStore', return_value=mock_vector_store):
+        with patch("rag_system.VectorStore", return_value=mock_vector_store):
             rag = RAGSystem(test_config)
 
             # Manually execute search to populate sources
@@ -327,13 +387,18 @@ class TestRAGSystemWithRealToolExecution:
 class TestRAGSystemErrorHandling:
     """Test error handling in RAG system"""
 
-    @patch('rag_system.AIGenerator')
-    @patch('rag_system.VectorStore')
-    @patch('rag_system.DocumentProcessor')
-    @patch('rag_system.SessionManager')
-    def test_query_handles_ai_errors(self, mock_session_class, mock_doc_proc,
-                                    mock_vector_store, mock_ai_gen_class,
-                                    test_config):
+    @patch("rag_system.AIGenerator")
+    @patch("rag_system.VectorStore")
+    @patch("rag_system.DocumentProcessor")
+    @patch("rag_system.SessionManager")
+    def test_query_handles_ai_errors(
+        self,
+        mock_session_class,
+        mock_doc_proc,
+        mock_vector_store,
+        mock_ai_gen_class,
+        test_config,
+    ):
         """Test that AI errors are propagated"""
         # Setup AI to raise error
         mock_ai_instance = Mock()
@@ -354,33 +419,42 @@ class TestRAGSystemErrorHandling:
 
         assert "API Error" in str(exc_info.value)
 
-    @patch('rag_system.AIGenerator')
-    @patch('rag_system.DocumentProcessor')
-    @patch('rag_system.SessionManager')
-    def test_query_handles_vector_store_errors(self, mock_session_class, mock_doc_proc,
-                                               mock_ai_gen_class, test_config,
-                                               mock_vector_store):
+    @patch("rag_system.AIGenerator")
+    @patch("rag_system.DocumentProcessor")
+    @patch("rag_system.SessionManager")
+    def test_query_handles_vector_store_errors(
+        self,
+        mock_session_class,
+        mock_doc_proc,
+        mock_ai_gen_class,
+        test_config,
+        mock_vector_store,
+    ):
         """Test handling of vector store errors"""
         # Setup vector store to return error
         from vector_store import SearchResults
 
         # Configure mock to return error
-        mock_vector_store.search = Mock(return_value=SearchResults(
-            documents=[],
-            metadata=[],
-            distances=[],
-            error="Vector store connection error"
-        ))
+        mock_vector_store.search = Mock(
+            return_value=SearchResults(
+                documents=[],
+                metadata=[],
+                distances=[],
+                error="Vector store connection error",
+            )
+        )
 
         mock_ai_instance = Mock()
-        mock_ai_instance.generate_response = Mock(return_value="I couldn't search the database")
+        mock_ai_instance.generate_response = Mock(
+            return_value="I couldn't search the database"
+        )
         mock_ai_gen_class.return_value = mock_ai_instance
 
         mock_session_instance = Mock()
         mock_session_instance.get_conversation_history = Mock(return_value=None)
         mock_session_class.return_value = mock_session_instance
 
-        with patch('rag_system.VectorStore', return_value=mock_vector_store):
+        with patch("rag_system.VectorStore", return_value=mock_vector_store):
             rag = RAGSystem(test_config)
 
             # Execute search manually to trigger error
@@ -393,13 +467,18 @@ class TestRAGSystemErrorHandling:
 class TestRAGSystemConversationHistory:
     """Test conversation history management"""
 
-    @patch('rag_system.AIGenerator')
-    @patch('rag_system.VectorStore')
-    @patch('rag_system.DocumentProcessor')
-    @patch('rag_system.SessionManager')
-    def test_history_passed_to_ai_generator(self, mock_session_class, mock_doc_proc,
-                                           mock_vector_store, mock_ai_gen_class,
-                                           test_config):
+    @patch("rag_system.AIGenerator")
+    @patch("rag_system.VectorStore")
+    @patch("rag_system.DocumentProcessor")
+    @patch("rag_system.SessionManager")
+    def test_history_passed_to_ai_generator(
+        self,
+        mock_session_class,
+        mock_doc_proc,
+        mock_vector_store,
+        mock_ai_gen_class,
+        test_config,
+    ):
         """Test that conversation history is passed to AI"""
         # Setup mocks
         test_history = "User: What is AI?\nAssistant: AI is artificial intelligence."
@@ -422,13 +501,18 @@ class TestRAGSystemConversationHistory:
         call_kwargs = mock_ai_instance.generate_response.call_args.kwargs
         assert call_kwargs["conversation_history"] == test_history
 
-    @patch('rag_system.AIGenerator')
-    @patch('rag_system.VectorStore')
-    @patch('rag_system.DocumentProcessor')
-    @patch('rag_system.SessionManager')
-    def test_new_exchange_added_to_history(self, mock_session_class, mock_doc_proc,
-                                          mock_vector_store, mock_ai_gen_class,
-                                          test_config):
+    @patch("rag_system.AIGenerator")
+    @patch("rag_system.VectorStore")
+    @patch("rag_system.DocumentProcessor")
+    @patch("rag_system.SessionManager")
+    def test_new_exchange_added_to_history(
+        self,
+        mock_session_class,
+        mock_doc_proc,
+        mock_vector_store,
+        mock_ai_gen_class,
+        test_config,
+    ):
         """Test that new exchanges are added to session"""
         # Setup mocks
         mock_ai_instance = Mock()

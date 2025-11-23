@@ -1,12 +1,14 @@
 """
 Unit tests for CourseSearchTool in search_tools.py
 """
-import pytest
-import sys
+
 import os
+import sys
+
+import pytest
 
 # Add parent directory to path
-sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..'))
+sys.path.insert(0, os.path.join(os.path.dirname(__file__), ".."))
 
 from search_tools import CourseSearchTool, ToolManager
 from vector_store import SearchResults
@@ -55,8 +57,7 @@ class TestCourseSearchToolExecution:
         """Test query with course_name filter"""
         tool = CourseSearchTool(mock_vector_store)
         result = tool.execute(
-            query="What is computer use?",
-            course_name="Building Towards Computer Use"
+            query="What is computer use?", course_name="Building Towards Computer Use"
         )
 
         # Should filter to only that course
@@ -66,10 +67,7 @@ class TestCourseSearchToolExecution:
     def test_execute_with_lesson_filter(self, mock_vector_store):
         """Test query with lesson_number filter"""
         tool = CourseSearchTool(mock_vector_store)
-        result = tool.execute(
-            query="Tell me about the content",
-            lesson_number=5
-        )
+        result = tool.execute(query="Tell me about the content", lesson_number=5)
 
         # Should filter to lesson 5
         assert isinstance(result, str)
@@ -81,7 +79,7 @@ class TestCourseSearchToolExecution:
         result = tool.execute(
             query="What is covered?",
             course_name="Building Towards Computer Use",
-            lesson_number=5
+            lesson_number=5,
         )
 
         # Should have both filters applied
@@ -102,9 +100,7 @@ class TestCourseSearchToolExecution:
         """Test empty results message includes filter info"""
         tool = CourseSearchTool(mock_vector_store)
         result = tool.execute(
-            query="nonexistent",
-            course_name="Some Course",
-            lesson_number=99
+            query="nonexistent", course_name="Some Course", lesson_number=99
         )
 
         assert "No relevant content found" in result
@@ -132,7 +128,9 @@ class TestCourseSearchToolFormatting:
         # Should have headers with course title
         assert "[" in result and "]" in result
         # Should have course titles
-        assert "Building Towards Computer Use" in result or "Introduction to MCP" in result
+        assert (
+            "Building Towards Computer Use" in result or "Introduction to MCP" in result
+        )
 
     def test_format_results_includes_lesson_numbers(self, mock_vector_store):
         """Test that lesson numbers are included in formatted output"""
@@ -161,7 +159,7 @@ class TestCourseSearchToolSourceTracking:
         tool.execute(query="What is prompt caching?")
 
         # Should have sources stored
-        assert hasattr(tool, 'last_sources')
+        assert hasattr(tool, "last_sources")
         assert isinstance(tool.last_sources, list)
         assert len(tool.last_sources) > 0
 
@@ -186,7 +184,9 @@ class TestCourseSearchToolSourceTracking:
             text = source["text"]
             assert len(text) > 0
             # Should have either course name or lesson info
-            assert any(keyword in text for keyword in ["Building", "Introduction", "Lesson"])
+            assert any(
+                keyword in text for keyword in ["Building", "Introduction", "Lesson"]
+            )
 
     def test_source_links_retrieved(self, mock_vector_store):
         """Test that course and lesson links are retrieved"""
@@ -195,7 +195,8 @@ class TestCourseSearchToolSourceTracking:
 
         # At least one source should have links
         has_links = any(
-            source.get("course_link") is not None or source.get("lesson_link") is not None
+            source.get("course_link") is not None
+            or source.get("lesson_link") is not None
             for source in tool.last_sources
         )
         assert has_links
@@ -236,8 +237,7 @@ class TestToolManagerIntegration:
         manager.register_tool(tool)
 
         result = manager.execute_tool(
-            "search_course_content",
-            query="What is prompt caching?"
+            "search_course_content", query="What is prompt caching?"
         )
 
         assert isinstance(result, str)
